@@ -11,7 +11,11 @@ namespace BattleShip.Tests
     {
         public void MockAddBattleShip(ShipPosition shipPosition)
         {
-            Setup(x => x.AddBattleShipAsync(shipPosition, default)).Returns(Task.CompletedTask);
+            var addBattleship = Task.Run(() => {
+                return (shipPosition.Row == "A" && shipPosition.Col == 1);
+            });
+
+            Setup(x => x.AddBattleShipAsync(shipPosition, default)).Returns(addBattleship);
         }
 
         public void MockAttack(MarkPosition markPosition)

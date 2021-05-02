@@ -5,7 +5,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Validations\" />
+    <None Remove="SampleBoard\myShips.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="SampleBoard\myShips.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="10.1.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="10.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 

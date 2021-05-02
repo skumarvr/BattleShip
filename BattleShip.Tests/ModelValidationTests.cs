@@ -1,26 +1,20 @@
-﻿using BattleShip.ViewModels;
+﻿using BattleShip.Validators;
+using BattleShip.ViewModels;
+using FluentValidation;
+using FluentValidation.Results;
 using NUnit.Framework;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace BattleShip.Tests
 {
     public class ModelValidationTests
     {
-        private IList<ValidationResult> Validate<T>(T model)
-        {
-            var result = new List<ValidationResult>();
-            var validationContext = new ValidationContext(model);
-            Validator.TryValidateObject(model, validationContext, result, true);
-
-            return result;
-        }
-
         [Test]
         public void Test_Validate_Model_MarkPosition()
         {
             MarkPosition validModel;
-            IList<ValidationResult> result;
+            ValidationResult result;
+            var validator = new MarkPositionValidator();
             int col;
             string row;
 
@@ -36,16 +30,16 @@ namespace BattleShip.Tests
                 // validate capital alphabet letter
                 validModel = new MarkPosition() { Row = row, Col =  col};
 
-                result = Validate<MarkPosition>(validModel);
-                Assert.AreEqual(0, result.Count);
+                result = validator.Validate(validModel);
+                Assert.AreEqual(true, result.IsValid);
 
                 // capital small letter
                 row = new string((char)(i + startChar + 32), 1);
                 // validate small alphabet letter 
                 validModel = new MarkPosition() { Row = row, Col = col };
 
-                result = Validate<MarkPosition>(validModel);
-                Assert.AreEqual(0, result.Count);
+                result = validator.Validate(validModel);
+                Assert.AreEqual(true, result.IsValid);
             }
 
             col = (i + 1);
@@ -54,28 +48,31 @@ namespace BattleShip.Tests
             // validate capital alphabet letter
             validModel = new MarkPosition() { Row = row, Col = col };
 
-            result = Validate<MarkPosition>(validModel);
-            Assert.AreEqual(2, result.Count);
-            Assert.AreEqual(result[0].ErrorMessage, "Allow character from 'a-j' or 'A-J'");
-            Assert.AreEqual(result[1].ErrorMessage, "Allow number from 1 to 10");
-            
+            result = validator.Validate(validModel);
+            Assert.AreEqual(false, result.IsValid);
+            Assert.AreEqual(2, result.Errors.Count);
+            Assert.AreEqual(result.Errors[0].ErrorMessage, "Please enter character from 'a-j' or 'A-J'");
+            Assert.AreEqual(result.Errors[1].ErrorMessage, "Please enter number from 1 to 10");
+
 
             // capital small letter
             row = new string((char)(i + startChar + 32), 1);
             // validate small alphabet letter 
             validModel = new MarkPosition() { Row = row, Col = col };
 
-            result = Validate<MarkPosition>(validModel);
-            Assert.AreEqual(2, result.Count);
-            Assert.AreEqual(result[0].ErrorMessage, "Allow character from 'a-j' or 'A-J'");
-            Assert.AreEqual(result[1].ErrorMessage, "Allow number from 1 to 10");
+            result = validator.Validate(validModel);
+            Assert.AreEqual(false, result.IsValid);
+            Assert.AreEqual(2, result.Errors.Count);
+            Assert.AreEqual(result.Errors[0].ErrorMessage, "Please enter character from 'a-j' or 'A-J'");
+            Assert.AreEqual(result.Errors[1].ErrorMessage, "Please enter number from 1 to 10");
         }
 
         [Test]
         public void Test_Validate_Model_ShipPosition()
         {
             ShipPosition validModel;
-            IList<ValidationResult> result;
+            ValidationResult result;
+            var validator = new ShipPositionValidator();
             int col;
             int length;
             string row;
@@ -93,16 +90,16 @@ namespace BattleShip.Tests
                 // validate capital alphabet letter
                 validModel = new ShipPosition() { Row = row, Col = col, Length = length, Vertical = (length%2==0) };
 
-                result = Validate<ShipPosition>(validModel);
-                Assert.AreEqual(0, result.Count);
+                result = validator.Validate(validModel);
+                Assert.AreEqual(true, result.IsValid);
 
                 // capital small letter
                 row = new string((char)(i + startChar + 32), 1);
                 // validate small alphabet letter 
                 validModel = new ShipPosition() { Row = row, Col = col, Length = length, Vertical = (length % 2 == 0) };
 
-                result = Validate<ShipPosition>(validModel);
-                Assert.AreEqual(0, result.Count);
+                result = validator.Validate(validModel);
+                Assert.AreEqual(true, result.IsValid);
             }
 
             col = (i + 1);
@@ -112,22 +109,24 @@ namespace BattleShip.Tests
             // validate capital alphabet letter
             validModel = new ShipPosition() { Row = row, Col = col, Length = length, Vertical = (length % 2 == 0) };
 
-            result = Validate<ShipPosition>(validModel);
-            Assert.AreEqual(3, result.Count);
-            Assert.AreEqual(result[0].ErrorMessage, "Allow character from 'a-j' or 'A-J'");
-            Assert.AreEqual(result[1].ErrorMessage, "Allow number from 1 to 10");
-            Assert.AreEqual(result[2].ErrorMessage, "Allow number from 1 to 10");
+            result = validator.Validate(validModel);
+            Assert.AreEqual(false, result.IsValid);
+            Assert.AreEqual(3, result.Errors.Count);
+            Assert.AreEqual(result.Errors[0].ErrorMessage, "Please enter character from 'a-j' or 'A-J'");
+            Assert.AreEqual(result.Errors[1].ErrorMessage, "Please enter number from 1 to 10");
+            Assert.AreEqual(result.Errors[2].ErrorMessage, "Please enter number from 1 to 10");
 
             // capital small letter
             row = new string((char)(i + startChar + 32), 1);
             // validate small alphabet letter 
             validModel = new ShipPosition() { Row = row, Col = col, Length = length, Vertical = (length % 2 == 0) };
 
-            result = Validate<ShipPosition>(validModel);
-            Assert.AreEqual(3, result.Count);
-            Assert.AreEqual(result[0].ErrorMessage, "Allow character from 'a-j' or 'A-J'");
-            Assert.AreEqual(result[1].ErrorMessage, "Allow number from 1 to 10");
-            Assert.AreEqual(result[2].ErrorMessage, "Allow number from 1 to 10");
+            result = validator.Validate(validModel);
+            Assert.AreEqual(false, result.IsValid);
+            Assert.AreEqual(3, result.Errors.Count);
+            Assert.AreEqual(result.Errors[0].ErrorMessage, "Please enter character from 'a-j' or 'A-J'");
+            Assert.AreEqual(result.Errors[1].ErrorMessage, "Please enter number from 1 to 10");
+            Assert.AreEqual(result.Errors[2].ErrorMessage, "Please enter number from 1 to 10");
         }
     }
 }

@@ -37,27 +37,27 @@ namespace BattleShip.Controllers
 
         [HttpPost]
         [Route("AddBattleShip")]
-        public async Task<IActionResult> AddBattleShipAsync(ShipPosition pos)
+        public async Task<ActionResult<bool>> AddBattleShipAsync(ShipPosition pos)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            await _gameService.AddBattleShipAsync(pos);
-            return Ok();
+            var addedBattleShip = await _gameService.AddBattleShipAsync(pos);
+
+            return Ok(addedBattleShip);
         }
 
         [HttpGet]
         [Route("Attack")]
-        public async Task<ActionResult<AttackStatus>> AttackAsync(MarkPosition pos)
+        public async Task<ActionResult<AttackStatusEnum>> AttackAsync(MarkPosition pos)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var attackStatus = new AttackStatus();
-            attackStatus.Status = await _gameService.AttackAsync(pos);
+            var attackStatus = await _gameService.AttackAsync(pos);
             return Ok(attackStatus);
         }
     }
