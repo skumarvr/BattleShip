@@ -35,6 +35,7 @@ namespace BattleShip.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("")]
+        [Route("/")]
         public string Get()
         {
             return "Welcome to BattleShips game!!!";
