@@ -1,4 +1,5 @@
 using BattleShip.Controllers;
+using BattleShip.Exceptions;
 using BattleShip.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,9 +28,12 @@ namespace BattleShip.Tests
         {
             _mockService.MockCreateBoard();
 
-            var result = await _controller.CreateBoardAsync();
-            Assert.IsInstanceOf<OkResult>(result);
-            Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)((result as OkResult).StatusCode));
+            var result = (await _controller.CreateBoardAsync()).Result as OkObjectResult;
+
+            Assert.IsInstanceOf<OkObjectResult>(result);
+            Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)(result.StatusCode));
+            Assert.AreEqual("TestGame", result.Value);
+
             _mockService.Verify(x => x.CreateBoardAsync(default), Times.Once);
         }
 
@@ -37,62 +41,99 @@ namespace BattleShip.Tests
         public async Task Test_Add_BattleShip_Success()
         {
             var shipPos = new ShipPosition { Row = "A", Col = 1 };
-            _mockService.MockAddBattleShip(shipPos);
+            var gameId = "TestGame";
+            _mockService.MockAddBattleShip(gameId, shipPos);
 
-            var result = (await _controller.AddBattleShipAsync(shipPos)).Result as OkObjectResult;
+            var result = (await _controller.AddBattleShipAsync(gameId, shipPos)).Result as OkObjectResult;
 
             Assert.IsInstanceOf<OkObjectResult>(result);
             Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)(result.StatusCode));
-            Assert.AreEqual(true, result.Value);
+            Assert.IsInstanceOf<AddBattleshipResponse>(result.Value);
 
-            _mockService.Verify(x => x.AddBattleShipAsync(shipPos, default), Times.Once);
+            var response = result.Value as AddBattleshipResponse;
+            Assert.AreEqual(AddBattleshipStatusEnum.True, response.Status);
+
+            _mockService.Verify(x => x.AddBattleShipAsync(gameId, shipPos, default), Times.Once);
         }
 
         [Test]
         public async Task Test_Add_BattleShip_Failed()
         {
             var shipPos = new ShipPosition { Row = "B", Col = 1 };
-            _mockService.MockAddBattleShip(shipPos);
+            var gameId = "TestGame";
+            _mockService.MockAddBattleShip(gameId, shipPos);
 
-            var result = (await _controller.AddBattleShipAsync(shipPos)).Result as OkObjectResult;
+            var result = (await _controller.AddBattleShipAsync(gameId, shipPos)).Result as OkObjectResult;
 
             Assert.IsInstanceOf<OkObjectResult>(result);
             Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)(result.StatusCode));
-            Assert.AreEqual(false, result.Value);
+            Assert.IsInstanceOf<AddBattleshipResponse>(result.Value);
 
-            _mockService.Verify(x => x.AddBattleShipAsync(shipPos, default), Times.Once);
+            var response = result.Value as AddBattleshipResponse;
+            Assert.AreEqual(AddBattleshipStatusEnum.False, response.Status);
+
+            _mockService.Verify(x => x.AddBattleShipAsync(gameId, shipPos, default), Times.Once);
         }
 
         [Test]
         public async Task Test_Attack_Hit()
         {
             var markPos = new MarkPosition { Row = "A", Col = 1 };
-            _mockService.MockAttack(markPos);
+            var gameId = "TestGame";
+            _mockService.MockAttack(gameId, markPos);
 
-            var result = (await _controller.AttackAsync(markPos)).Result as OkObjectResult;
-
+            var result = (await _controller.AttackAsync(gameId, markPos)).Result as OkObjectResult;
             Assert.IsInstanceOf<OkObjectResult>(result);
             Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)result.StatusCode);
-            Assert.IsInstanceOf<AttackStatusEnum>(result.Value);
+            Assert.IsInstanceOf<AttackResponse>(result.Value);
 
-            Assert.AreEqual(AttackStatusEnum.Hit, result.Value);
-            _mockService.Verify(x => x.AttackAsync(markPos, default), Times.Once);
+            var response = result.Value as AttackResponse;
+            Assert.AreEqual(AttackStatusEnum.Hit, response.Status);
+
+            _mockService.Verify(x => x.AttackAsync(gameId, markPos, default), Times.Once);
         }
 
         [Test]
         public async Task Test_Attack_Miss()
         {
             var markPos = new MarkPosition { Row = "B", Col = 1 };
-            _mockService.MockAttack(markPos);
+            var gameId = "TestGame";
+            _mockService.MockAttack(gameId, markPos);
 
-            var result = (await _controller.AttackAsync(markPos)).Result as OkObjectResult;
-
+            var result = (await _controller.AttackAsync(gameId, markPos)).Result as OkObjectResult;
             Assert.IsInstanceOf<OkObjectResult>(result);
             Assert.AreEqual(HttpStatusCode.OK, (HttpStatusCode)result.StatusCode);
-            Assert.IsInstanceOf<AttackStatusEnum>(result.Value);
+            Assert.IsInstanceOf<AttackResponse>(result.Value);
 
-            Assert.AreEqual(AttackStatusEnum.Miss, result.Value);
-            _mockService.Verify(x => x.AttackAsync(markPos, default), Times.Once);
+            var response = result.Value as AttackResponse;
+            Assert.AreEqual(AttackStatusEnum.Miss, response.Status);
+
+            _mockService.Verify(x => x.AttackAsync(gameId, markPos, default), Times.Once);
+        }
+
+        [Test]
+        public async Task Test_Invalid_Game_Id()
+        {
+            var gameId = "TestGame1";
+            var ex = new InvalidGameIdException();
+
+            var markPos = new MarkPosition { Row = "B", Col = 1 };
+            _mockService.MockAttack(gameId, markPos);
+
+            var result = (await _controller.AttackAsync(gameId, markPos)).Result as BadRequestObjectResult;
+            Assert.IsInstanceOf<BadRequestObjectResult>(result);
+            Assert.AreEqual(ex.Message, result.Value);
+
+            _mockService.Verify(x => x.AttackAsync(gameId, markPos, default), Times.Once);
+
+            var shipPos = new ShipPosition { Row = "B", Col = 1 };
+            _mockService.MockAddBattleShip(gameId, shipPos);
+
+            result = (await _controller.AddBattleShipAsync(gameId, shipPos)).Result as BadRequestObjectResult;
+            Assert.IsInstanceOf<BadRequestObjectResult>(result);
+            Assert.AreEqual(ex.Message, result.Value);
+
+            _mockService.Verify(x => x.AddBattleShipAsync(gameId, shipPos, default), Times.Once);
         }
     }
 }

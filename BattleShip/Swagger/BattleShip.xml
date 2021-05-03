@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BattleShip</name>
+    </assembly>
+    <members>
+        <member name="M:BattleShip.Controllers.GameController.Get">
+            <summary>
+            Welcome message
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:BattleShip.Controllers.GameController.CreateBoardAsync">
+            <summary>
+            Create board
+            </summary>
+            <returns>[GUID] Game id</returns>
+        </member>
+        <member name="M:BattleShip.Controllers.GameController.AddBattleShipAsync(System.String,BattleShip.ViewModels.ShipPosition)">
+            <summary>
+            Add battleship
+            </summary>
+            <param name="id">[GUID] game id obtained during create board</param>
+            <param name="pos">[ShipPosition] Positon where the ship should be placed on the board</param>
+            <returns>Status ( True or False )</returns>
+        </member>
+        <member name="M:BattleShip.Controllers.GameController.AttackAsync(System.String,BattleShip.ViewModels.MarkPosition)">
+            <summary>
+            Check for Attack
+            </summary>
+            <param name="id">[GUID] game id obtained during create board</param>
+            <param name="pos">[MarkPosition] Positon of the cell to be marked on the board</param>
+            <returns>Status ("Hit" or "Miss"</returns>
+        </member>
+    </members>
+</doc>

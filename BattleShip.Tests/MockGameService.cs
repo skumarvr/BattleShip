@@ -1,4 +1,5 @@
-﻿using BattleShip.Services;
+﻿using BattleShip.Exceptions;
+using BattleShip.Services;
 using BattleShip.ViewModels;
 using Moq;
 using System;
@@ -9,30 +10,37 @@ namespace BattleShip.Tests
 {
     public class MockGameService : Mock<IGameService>
     {
-        public void MockAddBattleShip(ShipPosition shipPosition)
+        public void MockAddBattleShip(string gameId, ShipPosition shipPosition)
         {
             var addBattleship = Task.Run(() => {
-                return (shipPosition.Row == "A" && shipPosition.Col == 1);
+                if (gameId != "TestGame") throw new InvalidGameIdException();
+                return (gameId == "TestGame" && shipPosition.Row == "A" && shipPosition.Col == 1);
             });
 
-            Setup(x => x.AddBattleShipAsync(shipPosition, default)).Returns(addBattleship);
+            Setup(x => x.AddBattleShipAsync(gameId, shipPosition, default)).Returns(addBattleship);
         }
 
-        public void MockAttack(MarkPosition markPosition)
+        public void MockAttack(string gameId, MarkPosition markPosition)
         {
             // Return true only if the attack position is A1
             var attackTask = Task.Run(() => {
-                return (markPosition.Row == "A" && markPosition.Col == 1)
+                if (gameId != "TestGame") throw new InvalidGameIdException();
+                return (gameId == "TestGame" && markPosition.Row == "A" && markPosition.Col == 1)
                             ? AttackStatusEnum.Hit
                             : AttackStatusEnum.Miss;
             });
 
-            Setup(x => x.AttackAsync(markPosition, default)).Returns(attackTask);
+            Setup(x => x.AttackAsync(gameId, markPosition, default)).Returns(attackTask);
         }
 
         public void MockCreateBoard()
         {
-            Setup(x => x.CreateBoardAsync(default)).Returns(Task.CompletedTask);
+            // Return true only if the attack position is A1
+            var CreateBoard = Task.Run(() => {
+                return "TestGame";
+            });
+
+            Setup(x => x.CreateBoardAsync(default)).Returns(CreateBoard);
         }
     }
 }

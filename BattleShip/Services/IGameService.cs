@@ -6,8 +6,8 @@ namespace BattleShip.Services
 {
     public interface IGameService
     {
-        Task CreateBoardAsync(CancellationToken ct = default);
-        Task<bool> AddBattleShipAsync(ShipPosition shipPosition, CancellationToken ct = default);
-        Task<AttackStatusEnum> AttackAsync(MarkPosition markPosition, CancellationToken ct = default);
+        Task<string> CreateBoardAsync(CancellationToken ct = default);
+        Task<bool> AddBattleShipAsync(string gameId, ShipPosition shipPosition, CancellationToken ct = default);
+        Task<AttackStatusEnum> AttackAsync(string gameId, MarkPosition markPosition, CancellationToken ct = default);
     }
 }

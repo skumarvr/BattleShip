@@ -1,5 +1,7 @@
-﻿using BattleShip.ViewModels;
+﻿using BattleShip.Exceptions;
+using BattleShip.ViewModels;
 using Microsoft.Extensions.Logging;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -10,33 +12,39 @@ namespace BattleShip.Services
 {
     public class GameService:IGameService
     {
-        private const int boardSize = 10;
-        private char[][] myShips;
+        private const int _boardSize = 10;
+        private char[][] _myShips;
+        private string _gameId = "";
 
-        public GameService(ILogger<GameService> logger)
+         public GameService(ILogger<GameService> logger)
         {
-            myShips = new char[boardSize][];
-            for (int row = 0; row < boardSize; row++)
+            _myShips = new char[_boardSize][];
+            for (int row = 0; row < _boardSize; row++)
             {
-                myShips[row] = new char[boardSize];
+                _myShips[row] = new char[_boardSize];
             }
         }
 
-        public async Task CreateBoardAsync(CancellationToken ct = default)
+        public async Task<string> CreateBoardAsync(CancellationToken ct = default)
         {
-            await InitialiseBoardUsingSampleData();
+            _gameId = await Task.Run(() => InitialiseBoardUsingSampleData());
+            return _gameId;
         }
 
-        public async Task<bool> AddBattleShipAsync(ShipPosition shipPosition, CancellationToken ct = default)
+        public async Task<bool> AddBattleShipAsync(string gameId, ShipPosition shipPosition, CancellationToken ct = default)
         {
+            if (gameId != _gameId) throw new InvalidGameIdException();
+
             int row = shipPosition.Row.ToUpper()[0] - 65;
             int col = shipPosition.Col - 1;
 
             return await Task.Run(() => CheckBattleShipCanBeAdded(shipPosition));
         }
 
-        public async Task<AttackStatusEnum> AttackAsync(MarkPosition markPosition, CancellationToken ct = default)
+        public async Task<AttackStatusEnum> AttackAsync(string gameId, MarkPosition markPosition, CancellationToken ct = default)
         {
+            if (gameId != _gameId) throw new InvalidGameIdException();
+
             return await Task.Run(() => CheckAttack(markPosition));
         }
 
@@ -58,11 +66,11 @@ namespace BattleShip.Services
             {
                 if(shipPosition.Vertical)
                 {
-                    shipExists = (myShips[row+i][col] == 'S');
+                    shipExists = (_myShips[row+i][col] == 'S');
                 }
                 else
                 {
-                    shipExists = (myShips[row][col+i] == 'S');
+                    shipExists = (_myShips[row][col+i] == 'S');
                 }
                 if (shipExists) break;
 
@@ -74,25 +82,24 @@ namespace BattleShip.Services
         {
             int row = markPosition.Row.ToUpper()[0] - 65;
             int col = markPosition.Col - 1;
-            return (myShips[row][col] == 'S')
+            return (_myShips[row][col] == 'S')
                         ? AttackStatusEnum.Hit
                         : AttackStatusEnum.Miss;
         }
 
-        private async Task InitialiseBoardUsingSampleData()
+        private string InitialiseBoardUsingSampleData()
         {
             var filePath = @".\SampleBoard\myShips.csv";
             var data = File.ReadLines(filePath).Select(x => x.Split(',')).ToArray();
-            for (int row = 0; row < boardSize; row++)
+            for (int row = 0; row < _boardSize; row++)
             {
-                for (int col = 0; col < boardSize; col++)
+                for (int col = 0; col < _boardSize; col++)
                 {
-                    myShips[row][col] = data[row][col][0];
+                    _myShips[row][col] = data[row][col][0];
                 }
             }
 
-            await Task.CompletedTask;
+            return Guid.NewGuid().ToString();
         }
-
     }
 }

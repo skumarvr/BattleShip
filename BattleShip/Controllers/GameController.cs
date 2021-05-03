@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BattleShip.Exceptions;
+using BattleShip.Validators;
 
 namespace BattleShip.Controllers
 {
@@ -27,38 +29,83 @@ namespace BattleShip.Controllers
             _gameService = gameService;
         }
 
+        /// <summary>
+        /// Welcome message
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("")]
+        public string Get()
+        {
+            return "Welcome to BattleShips game!!!";
+        }
+
+        /// <summary>
+        /// Create board
+        /// </summary>
+        /// <returns>[GUID] Game id</returns>
         [HttpPost]
         [Route("CreateBoard")]
-        public async Task<IActionResult> CreateBoardAsync()
+        public async Task<ActionResult<string>> CreateBoardAsync()
         {
-            await _gameService.CreateBoardAsync();
-            return Ok();
+            var gameId = await _gameService.CreateBoardAsync();
+            return Ok(gameId);
         }
 
+        /// <summary>
+        /// Add battleship
+        /// </summary>
+        /// <param name="id">[GUID] game id obtained during create board</param>
+        /// <param name="pos">[ShipPosition] Positon where the ship should be placed on the board</param>
+        /// <returns>Status ( True or False )</returns>
         [HttpPost]
         [Route("AddBattleShip")]
-        public async Task<ActionResult<bool>> AddBattleShipAsync(ShipPosition pos)
+        public async Task<ActionResult<AddBattleshipResponse>> AddBattleShipAsync([FromQuery]string id, [FromBody]ShipPosition pos)
         {
-            if (!ModelState.IsValid)
+            var validator = new ShipPositionValidator();
+            if (!validator.Validate(pos).IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var addedBattleShip = await _gameService.AddBattleShipAsync(pos);
 
-            return Ok(addedBattleShip);
+            try
+            {
+                var result = await _gameService.AddBattleShipAsync(id, pos);
+                var response = new AddBattleshipResponse() { Status = result ? AddBattleshipStatusEnum.True : AddBattleshipStatusEnum.False };
+                return Ok(response);
+            } 
+            catch (InvalidGameIdException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
+        /// <summary>
+        /// Check for Attack
+        /// </summary>
+        /// <param name="id">[GUID] game id obtained during create board</param>
+        /// <param name="pos">[MarkPosition] Positon of the cell to be marked on the board</param>
+        /// <returns>Status ("Hit" or "Miss"</returns>
         [HttpGet]
         [Route("Attack")]
-        public async Task<ActionResult<AttackStatusEnum>> AttackAsync(MarkPosition pos)
+        public async Task<ActionResult<AttackResponse>> AttackAsync([FromQuery]string id, [FromBody]MarkPosition pos)
         {
-            if (!ModelState.IsValid)
+            var validator = new MarkPositionValidator();
+            if (!validator.Validate(pos).IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var attackStatus = await _gameService.AttackAsync(pos);
-            return Ok(attackStatus);
+            try
+            {
+                var result = await _gameService.AttackAsync(id, pos);
+                var response = new AttackResponse() { Status = result };
+                return Ok(response);
+            } 
+            catch ( InvalidGameIdException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

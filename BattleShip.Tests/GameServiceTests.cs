@@ -1,4 +1,5 @@
-﻿using BattleShip.Services;
+﻿using BattleShip.Exceptions;
+using BattleShip.Services;
 using BattleShip.ViewModels;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,15 +14,16 @@ namespace BattleShip.Tests
     public class GameServiceTests
     {
         private Mock<ILogger<GameService>> _mockLogger;
-        private GameService gameService;
+        private GameService _gameService;
+        private string _gameId = "";
 
         [OneTimeSetUp]
         public async Task Init()
         {
             _mockLogger = new Mock<ILogger<GameService>>();
-            gameService = new GameService(_mockLogger.Object);
+            _gameService = new GameService(_mockLogger.Object);
 
-            await gameService.CreateBoardAsync();
+            _gameId = await _gameService.CreateBoardAsync();
         }
 
         [OneTimeTearDown]
@@ -41,7 +43,7 @@ namespace BattleShip.Tests
 
             foreach (var pos in shipPos)
             {
-                var result = await gameService.AddBattleShipAsync(pos);
+                var result = await _gameService.AddBattleShipAsync(_gameId, pos);
 
                 Assert.IsInstanceOf<bool>(result);
                 Assert.AreEqual(true, result);
@@ -58,7 +60,7 @@ namespace BattleShip.Tests
 
             foreach (var pos in shipPos)
             {
-                var result = await gameService.AddBattleShipAsync(pos);
+                var result = await _gameService.AddBattleShipAsync(_gameId, pos);
 
                 Assert.IsInstanceOf<bool>(result);
                 Assert.AreEqual(false, result);
@@ -76,7 +78,7 @@ namespace BattleShip.Tests
 
             foreach(var pos in markPos)
             {
-                var result = await gameService.AttackAsync(pos);
+                var result = await _gameService.AttackAsync(_gameId, pos);
 
                 Assert.IsInstanceOf<AttackStatusEnum>(result);
                 Assert.AreEqual(AttackStatusEnum.Hit, result);
@@ -94,11 +96,23 @@ namespace BattleShip.Tests
 
             foreach (var pos in markPos)
             {
-                var result = await gameService.AttackAsync(pos);
+                var result = await _gameService.AttackAsync(_gameId, pos);
 
                 Assert.IsInstanceOf<AttackStatusEnum>(result);
                 Assert.AreEqual(AttackStatusEnum.Miss, result);
             }
+        }
+
+        [Test]
+        public void Test_Invalid_Game_Id()
+        {   
+            var gameId = "TestGame1";
+
+            var markPos = new MarkPosition { Row = "A", Col = 5 };
+            Assert.ThrowsAsync<InvalidGameIdException>(() => _gameService.AttackAsync(gameId, markPos));
+
+            var shipPos = new ShipPosition { Row = "B", Col = 1 };
+            Assert.ThrowsAsync<InvalidGameIdException>(() => _gameService.AddBattleShipAsync(gameId, shipPos));
         }
     }
 }
