@@ -13,7 +13,7 @@ The task is to implement a Battleship state tracking API for a single player tha
 ### Endpoints
 | api | Type | Description |
 | --- | --- |  --- |
-| `\` | GET | Welcome message |
+| `/` | GET | Welcome message |
 | `/Game` | GET | Welcome message |
 | `/Game/CreateBoard` | POST | Create board |
 | `/Game/AddBattleShip` | POST | Add a battleship to the board |
