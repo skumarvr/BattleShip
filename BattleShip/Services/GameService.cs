@@ -16,7 +16,7 @@ namespace BattleShip.Services
         private char[][] _myShips;
         private string _gameId = "";
 
-         public GameService(ILogger<GameService> logger)
+        public GameService(ILogger<GameService> logger)
         {
             _myShips = new char[_boardSize][];
             for (int row = 0; row < _boardSize; row++)
@@ -25,12 +25,24 @@ namespace BattleShip.Services
             }
         }
 
+        /// <summary>
+        /// Create board
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         public async Task<string> CreateBoardAsync(CancellationToken ct = default)
         {
             _gameId = await Task.Run(() => InitialiseBoardUsingSampleData());
             return _gameId;
         }
 
+        /// <summary>
+        /// Add Battleship
+        /// </summary>
+        /// <param name="gameId"></param>
+        /// <param name="shipPosition"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         public async Task<bool> AddBattleShipAsync(string gameId, ShipPosition shipPosition, CancellationToken ct = default)
         {
             if (gameId != _gameId) throw new InvalidGameIdException();
@@ -41,6 +53,13 @@ namespace BattleShip.Services
             return await Task.Run(() => CheckBattleShipCanBeAdded(shipPosition));
         }
 
+        /// <summary>
+        /// Attack
+        /// </summary>
+        /// <param name="gameId"></param>
+        /// <param name="markPosition"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         public async Task<AttackStatusEnum> AttackAsync(string gameId, MarkPosition markPosition, CancellationToken ct = default)
         {
             if (gameId != _gameId) throw new InvalidGameIdException();
@@ -48,18 +67,15 @@ namespace BattleShip.Services
             return await Task.Run(() => CheckAttack(markPosition));
         }
 
+        /// <summary>
+        /// Function to check if the battleship can be added to the board
+        /// </summary>
+        /// <param name="shipPosition"></param>
+        /// <returns></returns>
         private bool CheckBattleShipCanBeAdded(ShipPosition shipPosition)
         {
             int row = shipPosition.Row.ToUpper()[0] - 65;
             int col = shipPosition.Col - 1;
-            if(shipPosition.Vertical)
-            {
-
-            }
-            else
-            {
-
-            }
 
             bool shipExists = false;
             for(int i=0;i<shipPosition.Length; i++)
@@ -78,6 +94,13 @@ namespace BattleShip.Services
             return !shipExists;
         }
 
+
+        /// <summary>
+        /// Function to check if attach is a hit or miss
+        /// ( Using myShip board instead of the opponent ship board. )
+        /// </summary>
+        /// <param name="markPosition"></param>
+        /// <returns></returns>
         private AttackStatusEnum CheckAttack(MarkPosition markPosition)
         {
             int row = markPosition.Row.ToUpper()[0] - 65;
@@ -87,6 +110,10 @@ namespace BattleShip.Services
                         : AttackStatusEnum.Miss;
         }
 
+        /// <summary>
+        /// Initialising my ship board data from sample csv file.
+        /// </summary>
+        /// <returns></returns>
         private string InitialiseBoardUsingSampleData()
         {
             var filePath = @".\SampleBoard\myShips.csv";
